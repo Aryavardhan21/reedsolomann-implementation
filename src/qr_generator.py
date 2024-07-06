@@ -18,10 +18,3 @@ def generate_qr(data, error_correction=qrcode.constants.ERROR_CORRECT_H, box_siz
         img = qr.make_image(fill_color=fill_color, back_color=back_color)
 
     return img
-
-# Example usage
-if __name__ == "__main__":
-    data = "https://www.example.com"
-    qr_image = generate_qr(data, style="rounded")
-    qr_image.save("example_qr.png")
-    print("QR code generated and saved as example_qr.png")
