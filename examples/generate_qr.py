@@ -1,5 +1,6 @@
 import sys
 import random
+from qr_generator import generate_qr
 sys.path.append('..')  # Add parent directory to Python path
 
 from src.qr_generator import generate_qr
