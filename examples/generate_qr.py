@@ -1,46 +1,45 @@
 import sys
+import random
 sys.path.append('..')  # Add parent directory to Python path
 
 from src.qr_generator import generate_qr
+from src.reed_solomon import ReedSolomon
+
+def string_to_ints(s):
+    return [ord(c) for c in s]
+
+def ints_to_string(ints):
+    return ''.join(chr(i) for i in ints)
 
 def main():
     data = input("Enter the data to encode in QR code: ")
-    error_correction_levels = {
-        'L': 1,
-        'M': 0,
-        'Q': 3,
-        'H': 2
-    }
     
-    ec_level = input("Enter error correction level (L, M, Q, H) [default: H]: ").upper() or 'H'
-    if ec_level not in error_correction_levels:
-        print("Invalid error correction level. Using H.")
-        ec_level = 'H'
-
-    box_size = int(input("Enter box size (1-50) [default: 10]: ") or 10)
-    border = int(input("Enter border size (0-10) [default: 4]: ") or 4)
+    # Convert string to integers for Reed-Solomon encoding
+    data_ints = string_to_ints(data)
     
-    style = input("Enter style (default or rounded) [default: default]: ").lower() or 'default'
-    if style not in ['default', 'rounded']:
-        print("Invalid style. Using default.")
-        style = 'default'
+    # Pad data to fit Reed-Solomon block size
+    rs_n, rs_k = 255, 223  # RS(255,223) can correct up to 16 errors
+    padded_data = data_ints + [0] * (rs_k - len(data_ints) % rs_k)
+    
+    # Initialize Reed-Solomon encoder
+    rs = ReedSolomon(rs_n, rs_k)
+    
+    # Encode data with Reed-Solomon
+    encoded_blocks = []
+    for i in range(0, len(padded_data), rs_k):
+        block = padded_data[i:i+rs_k]
+        encoded_block = rs.encode(block)
+        encoded_blocks.extend(encoded_block)
+    
+    # Convert encoded data back to string
+    encoded_data = ints_to_string(encoded_blocks)
+    
+    # Generate QR code
+    qr_image = generate_qr(encoded_data, error_correction=3)  # Using highest error correction level
 
-    fill_color = input("Enter fill color [default: black]: ") or "black"
-    back_color = input("Enter background color [default: white]: ") or "white"
-
-    qr_image = generate_qr(
-        data, 
-        error_correction=error_correction_levels[ec_level],
-        box_size=box_size,
-        border=border,
-        fill_color=fill_color,
-        back_color=back_color,
-        style=style
-    )
-
-    output_file = "generated_qr.png"
+    output_file = "generated_qr_with_rs.png"
     qr_image.save(output_file)
-    print(f"QR code generated and saved as {output_file}")
+    print(f"QR code with Reed-Solomon encoding generated and saved as {output_file}")
 
 if __name__ == "__main__":
     main()
