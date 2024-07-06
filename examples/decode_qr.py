@@ -1,5 +1,6 @@
 import sys
-sys.path.append('..')  # Add parent directory to Python path
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.qr_decoder import decode_qr
 from src.reed_solomon import ReedSolomon
@@ -33,11 +34,16 @@ def main():
             decoded_blocks = []
             for j in range(0, len(encoded_data), rs_n):
                 block = encoded_data[j:j+rs_n]
+                # Adjust values back to original range (0-255)
+                block = [max(0, b - 1) for b in block]
                 try:
                     decoded_block = rs.decode(block)
                     decoded_blocks.extend(decoded_block)
                 except ValueError as e:
                     print(f"Error in block {j//rs_n}: {str(e)}")
+                except IndexError:
+                    print(f"IndexError in block {j//rs_n}: Skipping this block")
+                    continue
             
             # Convert decoded data back to string and remove padding
             decoded_data = ints_to_string(decoded_blocks).rstrip('\x00')
