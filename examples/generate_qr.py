@@ -1,7 +1,6 @@
 import sys
-import random
-from qr_generator import generate_qr
-sys.path.append('..')  # Add parent directory to Python path
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.qr_generator import generate_qr
 from src.reed_solomon import ReedSolomon
@@ -32,8 +31,8 @@ def main():
         encoded_block = rs.encode(block)
         encoded_blocks.extend(encoded_block)
     
-    # Convert encoded data back to string
-    encoded_data = ints_to_string(encoded_blocks)
+    # Convert encoded data back to string, ensuring no zero values
+    encoded_data = ints_to_string([i + 1 for i in encoded_blocks])
     
     # Generate QR code
     qr_image = generate_qr(encoded_data, error_correction=3)  # Using highest error correction level
